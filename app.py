@@ -2,38 +2,54 @@ import streamlit as st
 import google.generativeai as genai
 
 st.set_page_config(page_title="AI File Manager", layout="wide")
-st.title("📂 בדיקת חיבור AI")
+st.title("📂 מנהל קבצים חכם")
 
 with st.sidebar:
     st.header("הגדרות")
     api_key_input = st.text_input("הכניסי API Key:", type="password")
     api_key = api_key_input.strip()
 
-if st.button("🔍 בדוק חיבור עכשיו"):
-    if not api_key:
-        st.error("נא להכניס מפתח!")
-    else:
-        try:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            # בדיקה פשוטה מאוד ללא קובץ
-            response = model.generate_content("Hello, respond with the word 'OK'")
-            st.success(f"החיבור עובד! ה-AI ענה: {response.text}")
-            st.balloons()
-        except Exception as e:
-            st.error(f"אופס! יש שגיאה בתקשורת: {str(e)}")
-            st.info("אם מופיעה שגיאת 'Illegal header', נסי ליצור מפתח חדש לגמרי ב-AI Studio.")
+if 'history' not in st.session_state:
+    st.session_state.history = []
 
-st.markdown("---")
-uploaded_file = st.file_uploader("או נסי להעלות קובץ לסיווג:")
+uploaded_file = st.file_uploader("בחרי קובץ מהמחשב")
+
 if uploaded_file and api_key:
-    if st.button("🚀 נתחי קובץ"):
+    if st.button("🚀 סווג קובץ"):
         try:
-            with st.spinner("מנסה לתקשר עם גוגל..."):
+            with st.spinner("מנתח..."):
+                # הגדרת המפתח
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                prompt = f"Categorize this file name: {uploaded_file.name}. One word in Hebrew."
+                
+                # שימוש במודל היציב ביותר ללא סיומות בטא
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                
+                # בקשת הסיווג
+                prompt = f"Categorize the file name '{uploaded_file.name}' into one or two words in Hebrew. Return only the category."
                 response = model.generate_content(prompt)
-                st.success(f"סיווג: {response.text}")
+                
+                # בדיקה שהתקבלה תשובה
+                if response.text:
+                    category = response.text.strip()
+                    st.session_state.history.append({"name": uploaded_file.name, "category": category})
+                    st.balloons()
+                    st.success(f"הקובץ סווג כ: {category}")
+                
         except Exception as e:
-            st.error(f"שגיאה בניתוח הקובץ: {e}")
+            # אם יש שגיאה עם פלאש, ננסה את המודל השני באופן אוטומטי
+            try:
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content(prompt)
+                category = response.text.strip()
+                st.session_state.history.append({"name": uploaded_file.name, "category": category})
+                st.balloons()
+                st.success(f"הסיווג הצליח (מודל גיבוי): {category}")
+            except:
+                st.error(f"שגיאה סופית: {e}")
+
+# תצוגת ההיסטוריה
+st.markdown("---")
+if st.session_state.history:
+    st.subheader("היסטוריית סיווג")
+    for item in reversed(st.session_state.history):
+        st.info(f"📁 **{item['category']}** | {item['name']}")
