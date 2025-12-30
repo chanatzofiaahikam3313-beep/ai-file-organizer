@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 st.set_page_config(page_title="AI File Manager", layout="wide")
-st.title("📂 AI File Manager")
+st.title("📂 מנהל קבצים חכם")
 
 with st.sidebar:
     st.header("הגדרות")
@@ -11,17 +11,16 @@ with st.sidebar:
 if 'history' not in st.session_state:
     st.session_state.history = []
 
-uploaded_file = st.file_uploader("בחרי קובץ")
+uploaded_file = st.file_uploader("בחרי קובץ מהמחשב")
 
 if uploaded_file and api_key:
-    if st.button("🚀 נתחי עם AI"):
+    if st.button("🚀 נתחי קובץ"):
         try:
-            with st.spinner("ה-AI מנתח את הקובץ..."):
+            with st.spinner("ה-AI מנתח..."):
                 genai.configure(api_key=api_key)
-                # משתמשים ב-gemini-pro כי הוא הכי יציב כרגע
                 model = genai.GenerativeModel('gemini-pro')
                 
-                prompt = f"Categorize the file name '{uploaded_file.name}' into one Hebrew word. Just the word."
+                prompt = f"Categorize the file name '{uploaded_file.name}' into one Hebrew word. For example: 'Bills', 'Studies', 'Work'."
                 response = model.generate_content(prompt)
                 
                 category = response.text.strip()
@@ -30,8 +29,9 @@ if uploaded_file and api_key:
         except Exception as e:
             st.error(f"שגיאה: {e}")
 
-# תצוגת ההיסטוריה
+# תצוגת היסטוריה
 st.markdown("---")
-st.subheader("היסטוריית סיווג")
-for item in reversed(st.session_state.history):
-    st.info(f"📁 **{item['category']}** | {item['name']}")
+if st.session_state.history:
+    st.subheader("היסטוריית סיווג")
+    for item in reversed(st.session_state.history):
+        st.info(f"📁 **{item['category']}** | {item['name']}")
