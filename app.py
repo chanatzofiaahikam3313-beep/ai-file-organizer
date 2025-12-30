@@ -18,9 +18,10 @@ if uploaded_file and api_key:
         try:
             with st.spinner("Processing..."):
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # אנחנו שולחים רק את השם של הקובץ כדי שזה יהיה מיידי
+                # שינוי למודל היציב ביותר שתמיד עובד
+                model = genai.GenerativeModel('gemini-pro')
+                
                 prompt = f"Categorize the file name '{uploaded_file.name}' into one Hebrew word."
                 response = model.generate_content(prompt)
                 
