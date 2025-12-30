@@ -19,7 +19,7 @@ if uploaded_file and api_key:
             with st.spinner("Processing..."):
                 genai.configure(api_key=api_key)
                 
-                # שינוי למודל היציב ביותר שתמיד עובד
+                # שינוי למודל היציב ביותר שתמיד עובד בכל הגרסאות
                 model = genai.GenerativeModel('gemini-pro')
                 
                 prompt = f"Categorize the file name '{uploaded_file.name}' into one Hebrew word."
@@ -32,5 +32,6 @@ if uploaded_file and api_key:
             st.error(f"Error: {e}")
 
 # תצוגת ההיסטוריה
+st.markdown("---")
 for item in reversed(st.session_state.history):
     st.info(f"📁 {item['category']} | {item['name']}")
